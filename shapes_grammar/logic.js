@@ -1,6 +1,7 @@
 // Janek Kurzydlo
 var currentLineSelection = {x1: 700, y1: 300, x2: 700, y2: 300}
 var currentCircleSelection = {cx: 700, cy: 300, r: 5}
+var points = []
 
 // Initialization
 var svgSelection = d3.select("svg")
@@ -46,6 +47,8 @@ firstProd.on("click", function(d) {
   currentLineSelection.x2 = x2;
   currentCircleSelection.cx = cx;
   markCurrent()
+  points.push({x: currentCircleSelection.cx, y: currentCircleSelection.cy})
+  markShapes()
 });
 
 // Production 2 - down
@@ -73,6 +76,8 @@ secondProd.on("click", function(d) {
   currentLineSelection.y2 = y2;
   currentCircleSelection.cy = cy;
   markCurrent()
+  points.push({x: currentCircleSelection.cx, y: currentCircleSelection.cy})
+  markShapes()
 });
 
 // Production 3 - up
@@ -100,6 +105,8 @@ thirdProd.on("click", function(d) {
   currentLineSelection.y2 = y2;
   currentCircleSelection.cy = cy;
   markCurrent()
+  points.push({x: currentCircleSelection.cx, y: currentCircleSelection.cy})
+  markShapes()
 });
 
 // Production 4 - left
@@ -127,6 +134,8 @@ forthProd.on("click", function(d) {
   currentLineSelection.x2 = x2;
   currentCircleSelection.cx = cx;
   markCurrent()
+  points.push({x: currentCircleSelection.cx, y: currentCircleSelection.cy})
+  markShapes()
 });
 
 function markCurrent() {
@@ -161,11 +170,90 @@ function simulate(step) {
   }
 }
 
-var steps = [4,4,4,4,2,2,2,1,1,1,1,1,3,3,3,3,4,4,4,2,2,1,1,1,1,1,1];
 
-(function myLoop (i) {
-  setTimeout(function () {
-    simulate(steps[i])
-    if (--i) myLoop(i);
-  }, 1000)
-})(steps.length);
+function squ1(point) {
+  var uniq_points = _.uniqWith(points, _.isEqual)
+  var flags = [false, false, false]
+
+  _.each(uniq_points, function (p) {
+    if (point.x - 40 == p.x && point.y == p.y) {
+      flags[0] = true
+    } else if (point.x - 40 == p.x && point.y - 40 == p.y) {
+      flags[1] = true
+    } else if (point.x == p.x && point.y - 40 == p.y) {
+      flags[2] = true
+    }
+  })
+
+  return _.every(flags)
+}
+
+function squ2(point) {
+  var uniq_points = _.uniqWith(points, _.isEqual)
+  var flags = [false, false, false]
+
+  _.each(uniq_points, function (p) {
+    if (point.x + 40 == p.x && point.y == p.y) {
+      flags[0] = true
+    } else if (point.x + 40 == p.x && point.y - 40 == p.y) {
+      flags[1] = true
+    } else if (point.x == p.x && point.y - 40 == p.y) {
+      flags[2] = true
+    }
+  })
+
+  return _.every(flags)
+}
+
+function squ3(point) {
+  var uniq_points = _.uniqWith(points, _.isEqual)
+  var flags = [false, false, false]
+
+  _.each(uniq_points, function (p) {
+    if (point.x + 40 == p.x && point.y == p.y) {
+      flags[0] = true
+    } else if (point.x + 40 == p.x && point.y + 40 == p.y) {
+      flags[1] = true
+    } else if (point.x == p.x && point.y + 40 == p.y) {
+      flags[2] = true
+    }
+  })
+
+  return _.every(flags)
+}
+
+function squ4(point) {
+  var uniq_points = _.uniqWith(points, _.isEqual)
+  var flags = [false, false, false]
+
+  _.each(uniq_points, function (p) {
+    if (point.x - 40 == p.x && point.y == p.y) {
+      flags[0] = true
+    } else if (point.x - 40 == p.x && point.y + 40 == p.y) {
+      flags[1] = true
+    } else if (point.x == p.x && point.y + 40 == p.y) {
+      flags[2] = true
+    }
+  })
+
+  return _.every(flags)
+}
+
+function markShapes() {
+  var uniq_points = _.uniqWith(points, _.isEqual)
+
+ var marks =  _.map(uniq_points, (p) => (
+    squ1(p) || squ2(p) || squ3(p) || squ4(p)
+  ))
+
+  var possitive = _.filter(marks, (x) => (x == true)).length
+  if(possitive > 0) {
+    valueOfMark = (possitive/uniq_points.length * 100).toFixed(2)
+    $("#ocena").text(valueOfMark)
+  } else {
+    valueOfMark = (possitive/uniq_points.length * 100).toFixed(3)
+    $("#ocena").text(0)
+  }
+
+  return possitive
+}
