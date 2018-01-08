@@ -1,8 +1,22 @@
 // Janek Kurzydlo
 var currentLineSelection = {x1: 700, y1: 300, x2: 700, y2: 300}
-var currentCircleSelection = {cx: 700, cy: 300, r: 5}
-var points = []
 var productions = []
+var generations = []
+var generationIndex = 1
+var currentGenerationIndex = 1
+var currentChildrenGeneration = []
+var currentParentGeneration = []
+
+$("#start").click(start)
+$("#next").click(next)
+$("#prev").click(prev)
+$("#generate").click(generate)
+$("#reset").click(reset)
+
+$("#prev").hide()
+$('#next').hide()
+$("#generate").hide()
+$("#reset").hide()
 
 // Initialization
 var svgSelection = d3.select("svg")
@@ -16,12 +30,6 @@ var lineSelection = svgSelection.append("line")
   .attr("y2", currentLineSelection.y2)
   .attr("stroke-width", 2)
   .attr("stroke", "black");
-var circleSelection = svgSelection.append("circle")
-  .attr("cx", currentCircleSelection.cx)
-  .attr("cy", currentCircleSelection.cy)
-  .attr("r", currentCircleSelection.r)
-  .style("fill", "black");
-
 
 // Production 1 - right
 var firstProd = d3.select("#firstProd");
@@ -31,7 +39,6 @@ firstProd.on("click", function(d) {
   var y = currentLineSelection.y2
   var x2 = currentLineSelection.x2 + 40;
   var x1 = x2 - 40;
-  var cx = currentCircleSelection.cx + 40;
 
   lineSelection = svgSelection.append("line")
     .attr("x1", x1)
@@ -40,17 +47,9 @@ firstProd.on("click", function(d) {
     .attr("y2", y)
     .attr("stroke-width", 2)
     .attr("stroke", "black");
-  circleSelection = svgSelection.append("circle")
-    .attr("cx", cx)
-    .attr("cy", y)
-    .attr("r", currentCircleSelection.r)
 
   currentLineSelection.x1 = x1;
   currentLineSelection.x2 = x2;
-  currentCircleSelection.cx = cx;
-  markCurrent()
-  points.push({x: currentCircleSelection.cx, y: currentCircleSelection.cy})
-  markShapes2(productions)
 });
 
 // Production 2 - down
@@ -61,7 +60,6 @@ secondProd.on("click", function(d) {
   var x = currentLineSelection.x2;
   var y2 = currentLineSelection.y2 + 40;
   var y1 = y2 - 40;
-  var cy = currentCircleSelection.cy + 40;
 
   lineSelection = svgSelection.append("line")
     .attr("x1", x)
@@ -70,17 +68,9 @@ secondProd.on("click", function(d) {
     .attr("y2", y2)
     .attr("stroke-width", 2)
     .attr("stroke", "black");
-  circleSelection = svgSelection.append("circle")
-    .attr("cx", x)
-    .attr("cy", cy)
-    .attr("r", currentCircleSelection.r)
 
   currentLineSelection.y1 = y1;
   currentLineSelection.y2 = y2;
-  currentCircleSelection.cy = cy;
-  markCurrent()
-  points.push({x: currentCircleSelection.cx, y: currentCircleSelection.cy})
-  markShapes2(productions)
 });
 
 // Production 3 - up
@@ -91,7 +81,6 @@ thirdProd.on("click", function(d) {
   var x = currentLineSelection.x2;
   var y2 = currentLineSelection.y2 - 40;
   var y1 = currentLineSelection.y2;
-  var cy = currentCircleSelection.cy - 40;
 
   lineSelection = svgSelection.append("line")
     .attr("x1", x)
@@ -100,17 +89,9 @@ thirdProd.on("click", function(d) {
     .attr("y2", y2)
     .attr("stroke-width", 2)
     .attr("stroke", "black");
-  circleSelection = svgSelection.append("circle")
-    .attr("cx", x)
-    .attr("cy", cy)
-    .attr("r", currentCircleSelection.r)
 
   currentLineSelection.y1 = y1;
   currentLineSelection.y2 = y2;
-  currentCircleSelection.cy = cy;
-  markCurrent()
-  points.push({x: currentCircleSelection.cx, y: currentCircleSelection.cy})
-  markShapes2(productions)
 });
 
 // Production 4 - left
@@ -121,7 +102,6 @@ forthProd.on("click", function(d) {
   var y = currentLineSelection.y2
   var x2 = currentLineSelection.x2 - 40;
   var x1 = currentLineSelection.x2
-  var cx = currentCircleSelection.cx - 40;
 
   lineSelection = svgSelection.append("line")
     .attr("x1", x1)
@@ -130,118 +110,10 @@ forthProd.on("click", function(d) {
     .attr("y2", y)
     .attr("stroke-width", 2)
     .attr("stroke", "black");
-  circleSelection = svgSelection.append("circle")
-    .attr("cx", cx)
-    .attr("cy", y)
-    .attr("r", currentCircleSelection.r)
 
   currentLineSelection.x1 = x1;
   currentLineSelection.x2 = x2;
-  currentCircleSelection.cx = cx;
-  markCurrent()
-  points.push({x: currentCircleSelection.cx, y: currentCircleSelection.cy})
-  markShapes2(productions)
 });
-
-function markCurrent() {
-  var ccx = currentCircleSelection.cx;
-  var ccy = currentCircleSelection.cy;
-
-  $("circle").each(function(){
-    if(parseInt($(this).attr("cx")) == ccx && parseInt($(this).attr("cy")) == ccy) {
-      $(this).attr('fill', 'red');
-    } else {
-      $(this).attr('fill', 'black');
-    }
-  });
-}
-
-function squ1(point) {
-  var uniq_points = _.uniqWith(points, _.isEqual)
-  var flags = [false, false, false]
-
-  _.each(uniq_points, function (p) {
-    if (point.x - 40 == p.x && point.y == p.y) {
-      flags[0] = true
-    } else if (point.x - 40 == p.x && point.y - 40 == p.y) {
-      flags[1] = true
-    } else if (point.x == p.x && point.y - 40 == p.y) {
-      flags[2] = true
-    }
-  })
-
-  return _.every(flags)
-}
-
-function squ2(point) {
-  var uniq_points = _.uniqWith(points, _.isEqual)
-  var flags = [false, false, false]
-
-  _.each(uniq_points, function (p) {
-    if (point.x + 40 == p.x && point.y == p.y) {
-      flags[0] = true
-    } else if (point.x + 40 == p.x && point.y - 40 == p.y) {
-      flags[1] = true
-    } else if (point.x == p.x && point.y - 40 == p.y) {
-      flags[2] = true
-    }
-  })
-
-  return _.every(flags)
-}
-
-function squ3(point) {
-  var uniq_points = _.uniqWith(points, _.isEqual)
-  var flags = [false, false, false]
-
-  _.each(uniq_points, function (p) {
-    if (point.x + 40 == p.x && point.y == p.y) {
-      flags[0] = true
-    } else if (point.x + 40 == p.x && point.y + 40 == p.y) {
-      flags[1] = true
-    } else if (point.x == p.x && point.y + 40 == p.y) {
-      flags[2] = true
-    }
-  })
-
-  return _.every(flags)
-}
-
-function squ4(point) {
-  var uniq_points = _.uniqWith(points, _.isEqual)
-  var flags = [false, false, false]
-
-  _.each(uniq_points, function (p) {
-    if (point.x - 40 == p.x && point.y == p.y) {
-      flags[0] = true
-    } else if (point.x - 40 == p.x && point.y + 40 == p.y) {
-      flags[1] = true
-    } else if (point.x == p.x && point.y + 40 == p.y) {
-      flags[2] = true
-    }
-  })
-
-  return _.every(flags)
-}
-
-function markShapes() {
-  var uniq_points = _.uniqWith(points, _.isEqual)
-
-  var marks =  _.map(uniq_points, (p) => (
-    squ1(p) || squ2(p) || squ3(p) || squ4(p)
-  ))
-
-  var possitive = _.filter(marks, (x) => (x == true)).length
-  if(possitive > 0) {
-    valueOfMark = (possitive/uniq_points.length * 100).toFixed(2)
-    $("#ocena").text(valueOfMark)
-  } else {
-    valueOfMark = (possitive/uniq_points.length * 100).toFixed(3)
-    $("#ocena").text(0)
-  }
-
-  return possitive
-}
 
 function markShapes2(productions) {
   ratio = currentRatio(productions)
@@ -274,8 +146,8 @@ function generateProductions(n) {
   return generatedValues
 }
 
-function draw(productions) {
-  $("#ocena").text(markShapes2(productions))
+function draw(productions, startLine) {
+  currentLineSelection = startLine || {x1: 400, y1: 300, x2: 400, y2: 300}
   _.each(productions, function(p) {
     switch(p) {
       case "r":
@@ -296,29 +168,36 @@ function draw(productions) {
   })
 }
 
+function drawGroup(group) {
+  clear()
+  var startPoints = [
+    {x1: 50, y1: 150, x2: 50, y2: 150},
+    {x1: 500, y1: 150, x2: 500, y2: 150},
+    {x1: 1000, y1: 150, x2: 1000, y2: 150},
+    {x1: 50, y1: 500, x2: 50, y2: 500},
+    {x1: 500, y1: 500, x2: 500, y2: 500},
+    {x1: 1000, y1: 500, x2: 1000, y2: 500}
+  ]
+  _.each(group, function(productions, i) {
+    draw(productions, startPoints[i])
+  })
+}
+
 function clear() {
-  $("svg").empty();
-currentLineSelection = {x1: 700, y1: 300, x2: 700, y2: 300}
- currentCircleSelection = {cx: 700, cy: 300, r: 5}
- points = []
+ $("svg").empty();
+ currentLineSelection = {x1: 700, y1: 300, x2: 700, y2: 300}
  productions = []
   svgSelection = d3.select("svg")
     .attr("width", "100%")
     .attr("height", "10000px")
-
-  circleSelection = svgSelection.append("circle")
-    .attr("cx", 700)
-    .attr("cy", 300)
-    .attr("r", 5)
-    .style("fill", "black");
-
 }
 
 function productionGroups(n) {
+  var nProduction = 8
   var groups = []
 
   _(n).times(function(itr) {
-    var productions = generateProductions(_.random(0, 100))
+    var productions = generateProductions(nProduction)
     groups.push(productions)
   })
 
@@ -326,33 +205,113 @@ function productionGroups(n) {
 }
 
 function findBestGroups(groups) {
-  var all_marks = []
+  // Taking best 10
+  var allMarks = []
 
   _.each(groups, function(g, i) {
     var obj = {
       mark: markShapes2(g),
       index: i
     }
-    all_marks.push(obj)
+    allMarks.push(obj)
   })
 
-  var marks = _.sortBy(all_marks, (obj) => (obj.mark))
+  var marks = _.sortBy(allMarks, (obj) => (obj.mark))
   var partition =  _.partition(marks, (obj) => (obj.mark > 1))
-  var greater = _.takeRight(partition[0], 10)
-  var smaller = _.takeRight(partition[1], greater.length)
+  var greater = _.takeRight(partition[0], 2)
+  var smaller = _.takeRight(partition[1], 4 - greater.length)
   var bestGroups = smaller.concat(greater)
 
   return _.map(bestGroups, (gr) => (groups[gr.index]))
 
 }
 
+function crossing(groups) {
+  var pairs = _.chunk(groups, 2)
+  var crossed = _.flatMap(pairs, function(e) {
+    var nLeft = _.random(1, e[0].length)
+    var nRight = e[0].length - nLeft
 
-function mutation(bestGroups) {
-  var mutation = _.flatten(bestGroups)
-  markShapes2(mutation)
-  return mutation
+    var new1 = _.take(e[0], nLeft).concat(_.takeRight(e[1], nRight))
+    var new2 = _.take(e[1], nLeft).concat(_.takeRight(e[0], nRight))
+
+    return [new1, new2]
+  })
+
+  return crossed
 }
 
+function process(children, parents = []) {
+  var bestChildren = findBestGroups(children)
+
+  if (bestChildren.length < 6) {
+   bestChildren = bestChildren.concat(_.take(parents, 6 - bestChildren.length))
+  }
+
+  var newChildren = crossing(bestChildren)
+  return [newChildren, bestChildren]
+}
+
+function start() {
+  var startGroup = productionGroups(6)
+  $('#start').hide()
+  $("#generation").text(generationIndex)
+
+  var processed = process(startGroup, startGroup)
+  currentChildrenGeneration = processed[0]
+  currentParentGeneration = processed[1]
+
+  generations.push(currentChildrenGeneration)
+  drawGroup(currentChildrenGeneration)
+
+  $('#generate').show()
+  $("#reset").show()
+}
+
+function generate() {
+  generationIndex += 1
+  currentGenerationIndex += 1
+
+  $("#generation").text(generationIndex)
+
+  var processed = process(currentChildrenGeneration, currentParentGeneration)
+  currentChildrenGeneration = processed[0]
+  currentParentGeneration = processed[1]
+
+  generations.push(currentChildrenGeneration)
+  drawGroup(currentChildrenGeneration)
+
+  $('#prev').show()
+}
+
+function next() {
+  currentGenerationIndex += 1
+  $("#generation").text(currentGenerationIndex)
+  drawGroup(generations[currentGenerationIndex - 1])
+
+  if (currentGenerationIndex == generationIndex) {
+    $('#next').hide()
+  }
+
+  $('#prev').show()
+}
+
+function prev() {
+  currentGenerationIndex -= 1
+  $("#generation").text(currentGenerationIndex)
+  drawGroup(generations[currentGenerationIndex - 1])
+
+  if (currentGenerationIndex == 1) {
+    $('#prev').hide()
+  }
+
+  $('#next').show()
+}
+
+
+function reset() {
+  location.reload();
+}
 
 
 // Flow
