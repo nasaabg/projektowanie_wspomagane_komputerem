@@ -21,7 +21,7 @@ $("#reset").hide()
 // Initialization
 var svgSelection = d3.select("svg")
   .attr("width", "100%")
-  .attr("height", "10000px")
+  .attr("height", "1000")
 
 var lineSelection = svgSelection.append("line")
   .attr("x1", currentLineSelection.x1)
@@ -115,6 +115,14 @@ forthProd.on("click", function(d) {
   currentLineSelection.x2 = x2;
 });
 
+function markShapes(productions) {
+  ratio = currentRatio(productions)
+  sum = ratio.r + ratio.l + ratio.up + ratio.dn
+  return (ratio.dn + ratio.up)%8 * 0.8 + 0.2 * (ratio.r + ratio.l)%8
+
+
+}
+
 function markShapes2(productions) {
   ratio = currentRatio(productions)
   value = (ratio.r * ratio.dn) / (ratio.l * ratio.up)
@@ -123,10 +131,10 @@ function markShapes2(productions) {
 
 function currentRatio(productions) {
   var counts = {
-    r: 1,
-    l: 1,
-    up: 1,
-    dn: 1,
+    r: 0,
+    l: 0,
+    up: 0,
+    dn: 0,
   };
 
   _.each(productions, (p) => (counts[p] += 1))
@@ -171,10 +179,10 @@ function draw(productions, startLine) {
 function drawGroup(group) {
   clear()
   var startPoints = [
-    {x1: 50, y1: 150, x2: 50, y2: 150},
-    {x1: 500, y1: 150, x2: 500, y2: 150},
-    {x1: 1000, y1: 150, x2: 1000, y2: 150},
-    {x1: 50, y1: 500, x2: 50, y2: 500},
+    {x1: 100, y1: 200, x2: 100, y2: 200},
+    {x1: 500, y1: 200, x2: 500, y2: 200},
+    {x1: 1000, y1: 200, x2: 1000, y2: 200},
+    {x1: 100, y1: 500, x2: 100, y2: 500},
     {x1: 500, y1: 500, x2: 500, y2: 500},
     {x1: 1000, y1: 500, x2: 1000, y2: 500}
   ]
@@ -189,7 +197,7 @@ function clear() {
  productions = []
   svgSelection = d3.select("svg")
     .attr("width", "100%")
-    .attr("height", "10000px")
+    .attr("height", "1000")
 }
 
 function productionGroups(n) {
@@ -205,12 +213,12 @@ function productionGroups(n) {
 }
 
 function findBestGroups(groups) {
-  // Taking best 10
+  // Taking best 4
   var allMarks = []
 
   _.each(groups, function(g, i) {
     var obj = {
-      mark: markShapes2(g),
+      mark: markShapes(g),
       index: i
     }
     allMarks.push(obj)
