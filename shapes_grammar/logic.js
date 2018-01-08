@@ -119,8 +119,6 @@ function markShapes(productions) {
   ratio = currentRatio(productions)
   sum = ratio.r + ratio.l + ratio.up + ratio.dn
   return (ratio.dn + ratio.up)%8 * 0.8 + 0.2 * (ratio.r + ratio.l)%8
-
-
 }
 
 function markShapes2(productions) {
@@ -225,13 +223,8 @@ function findBestGroups(groups) {
   })
 
   var marks = _.sortBy(allMarks, (obj) => (obj.mark))
-  var partition =  _.partition(marks, (obj) => (obj.mark > 1))
-  var greater = _.takeRight(partition[0], 2)
-  var smaller = _.takeRight(partition[1], 4 - greater.length)
-  var bestGroups = smaller.concat(greater)
-
-  return _.map(bestGroups, (gr) => (groups[gr.index]))
-
+  var marked = _.map(marks, (gr) => (groups[gr.index]))
+  return _.takeRight(marked, 4)
 }
 
 function crossing(groups) {
