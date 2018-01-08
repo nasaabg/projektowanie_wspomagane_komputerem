@@ -249,8 +249,22 @@ function process(children, parents = []) {
   }
 
   var newChildren = crossing(bestChildren)
-  return [newChildren, bestChildren]
+  var newChildrenMutated = mutation(newChildren)
+  return [newChildrenMutated, bestChildren]
 }
+
+function mutation(children) {
+  var values = ["r","l","up","dn"]
+
+  var affectedIndex = _.random(0, 5)
+  var production1 = values[Math.floor(Math.random() * values.length)];
+  var production2 = values[Math.floor(Math.random() * values.length)];
+
+  children[affectedIndex][_.random(0, 7)] = production1
+  children[affectedIndex][_.random(0, 7)] = production2
+  return children
+}
+
 
 function start() {
   var startGroup = productionGroups(6)
